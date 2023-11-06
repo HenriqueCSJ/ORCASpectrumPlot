@@ -4,6 +4,8 @@
 
 ORCASpectrumPlot is a graphical user interface (GUI) tool developed to facilitate the loading, processing, and visualization of spectral data from `.spectrum` files, which are an output of the Excited State Dynamics (ESD) simulations performed with the ORCA quantum chemistry software package. This application provides features for spectral broadening through Gaussian convolution, energy domain shifting, and interactive visualization within specified energy ranges. It allows users to save their modified spectral data for further use.
 
+![ORCASpectrumPlot GUI](https://github.com/HenriqueCSJ/ORCASpectrumPlot/blob/main/img/window.png?raw=true)
+
 ## Requirements
 
 - Python 3.x
