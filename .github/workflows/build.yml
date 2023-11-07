@@ -3,7 +3,14 @@ name: Build and Release
 on:
   push:
     branches:
-      - main  # or the name of your default branch
+      - main
+    tags:
+      - 'v*'  # Trigger the workflow when a new tag is pushed.
+  workflow_dispatch:  # Allow manual workflow runs.
+    inputs:
+      tagName:
+        description: 'Tag Name to Release'  # This will show in the GitHub UI
+        required: true
 
 jobs:
   build:
@@ -12,11 +19,13 @@ jobs:
     steps:
     - name: Check out code
       uses: actions/checkout@v2
+      with:
+        ref: ${{ github.event.inputs.tagName }}  # Check out the tag provided in manual trigger
 
     - name: Set up Python 3.11
       uses: actions/setup-python@v2
       with:
-        python-version: '3.11'  # Specify Python 3.11
+        python-version: '3.11'
 
     - name: Install dependencies
       run: |
@@ -26,8 +35,25 @@ jobs:
     - name: Build Executable with PyInstaller
       run: pyinstaller --onefile --windowed ORCASpectrumPlot.py
 
-    - name: Upload Executable Artifact
-      uses: actions/upload-artifact@v2
+    - name: Create Release
+      if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+      id: create_release
+      uses: actions/create-release@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       with:
-        name: ORCASpectrumPlot-Windows
-        path: dist/ORCASpectrumPlot.exe
+        tag_name: ${{ steps.checkout.outputs.tag_name || github.event.inputs.tagName }}
+        release_name: Release ${{ steps.checkout.outputs.tag_name || github.event.inputs.tagName }}
+        draft: false
+        prerelease: false
+
+    - name: Upload Executable Artifact to Release
+      if: startsWith(github.ref, 'refs/tags/') || github.event_name == 'workflow_dispatch'
+      uses: actions/upload-release-asset@v1
+      env:
+        GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      with:
+        upload_url: ${{ steps.create_release.outputs.upload_url }}
+        asset_path: ./dist/ORCASpectrumPlot.exe
+        asset_name: ORCASpectrumPlot.exe
+        asset_content_type: application/octet-stream
